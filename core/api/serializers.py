@@ -1,25 +1,26 @@
-# serializers.py
 from rest_framework import serializers
+from rest_framework_mongoengine import serializers as me_serializers
 from django.contrib.auth.models import User
+from django.contrib.auth import authenticate
 from .models import UserProfile
 
-class UserRegistrationSerializer(serializers.Serializer):  # <--- Note singular
-    username = serializers.CharField(max_length=150)
-    email = serializers.EmailField()
-    password = serializers.CharField(write_only=True)
+class UserRegistrationSerializer(serializers.ModelSerializer):
+    """Serializer for user registration"""
+    password = serializers.CharField(write_only=True, min_length=8)
     password_confirm = serializers.CharField(write_only=True)
-
-    def validate(self, data):
-        if data['password'] != data['password_confirm']:
-            raise serializers.ValidationError("Passwords do not match.")
-        return data
-
+    
+    class Meta:
+        model = User
+        fields = ('username', 'email', 'first_name', 'last_name', 'password', 'password_confirm')
+    
+    def validate(self, attrs):
+        if attrs['password'] != attrs['password_confirm']:
+            raise serializers.ValidationError("Passwords don't match")
+        return attrs
+    
     def create(self, validated_data):
-        validated_data.pop("password_confirm")
-        user = User.objects.create_user(
-            username=validated_data['username'],
-            email=validated_data['email'],
-            password=validated_data['password']
-        )
+        validated_data.pop('password_confirm')
+        user = User.objects.create_user(**validated_data)
+        # Create MongoDB profile
         UserProfile.create_from_user(user)
         return user

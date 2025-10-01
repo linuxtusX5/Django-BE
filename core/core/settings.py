@@ -1,4 +1,5 @@
-import mongoengine
+import os
+from mongoengine import connect
 from decouple import config
 from pathlib import Path
 
@@ -28,6 +29,8 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
     'rest_framework',
+    'rest_framework.authtoken',
+    'rest_framework_mongoengine',
     'api'
 ]
 
@@ -62,19 +65,11 @@ WSGI_APPLICATION = 'core.wsgi.application'
 
 
 # Database
-# https://docs.djangoproject.com/en/5.2/ref/settings/#databases
-
-# --- MongoDB connection Using mongoengine---
-# Use your local MongoDB or Atlas connection string:
-mongoengine.connect(
-    db=config('MONGO_NAME'),
-    host=config('MONGO_URI')
-)
 # Keep a dummy database for Django's auth system
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': ':memory:',
+        'NAME': BASE_DIR / 'db.sqlite3',
     }
 }
 # Password validation
@@ -117,3 +112,14 @@ STATIC_URL = 'static/'
 # https://docs.djangoproject.com/en/5.2/ref/settings/#default-auto-field
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
+
+AUTHENTICATION_BACKENDS = [
+    "api.mongodb.MongoBackend",  # our custom backend (Mongo)
+    # "django.contrib.auth.backends.ModelBackend",  # optional fallback
+]
+
+
+# --- MongoDB connection ---
+# Use your local MongoDB or Atlas connection string:
+MONGO_URL = config("MONGO_URI")
+connect(host=MONGO_URL)

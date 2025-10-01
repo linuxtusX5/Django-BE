@@ -2,6 +2,7 @@ from mongoengine import Document, EmbeddedDocument, fields
 from django.contrib.auth.models import User
 from datetime import datetime
 
+# Create your models here.
 class BaseDocument(Document):
     """Base document with common fields"""
     created_at = fields.DateTimeField(default=datetime.utcnow)
