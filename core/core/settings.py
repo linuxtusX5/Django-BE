@@ -1,5 +1,4 @@
 import os
-from mongoengine import connect
 from decouple import config
 from pathlib import Path
 
@@ -30,7 +29,6 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
     'rest_framework',
     'rest_framework.authtoken',
-    'rest_framework_mongoengine',
     'api'
 ]
 
@@ -63,15 +61,25 @@ TEMPLATES = [
 
 WSGI_APPLICATION = 'core.wsgi.application'
 
-
-# Database
-# Keep a dummy database for Django's auth system
-DATABASES = {
-    'default': {
-        'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': BASE_DIR / 'db.sqlite3',
+DJONGO = {
+    'SCHEMA': {
+        'USER': {
+            'ID_TYPE': 'int',  # Force integer IDs for User model
+        }
     }
 }
+
+# Database configuration for MongoDB (you'll need to install djongo)
+DATABASES = {
+    'default': {
+        'ENGINE': 'djongo',
+        'NAME': config('MONGO_NAME'),
+        'CLIENT': {
+            'host': config('MONGO_URI'),
+        }
+    }
+}
+
 # Password validation
 # https://docs.djangoproject.com/en/5.2/ref/settings/#auth-password-validators
 
@@ -112,14 +120,3 @@ STATIC_URL = 'static/'
 # https://docs.djangoproject.com/en/5.2/ref/settings/#default-auto-field
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
-
-AUTHENTICATION_BACKENDS = [
-    "api.mongodb.MongoBackend",  # our custom backend (Mongo)
-    # "django.contrib.auth.backends.ModelBackend",  # optional fallback
-]
-
-
-# --- MongoDB connection ---
-# Use your local MongoDB or Atlas connection string:
-MONGO_URL = config("MONGO_URI")
-connect(host=MONGO_URL)

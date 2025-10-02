@@ -3,7 +3,6 @@ from rest_framework.decorators import api_view, permission_classes
 from rest_framework.response import Response
 from rest_framework.authtoken.models import Token
 from django.contrib.auth.models import User
-from .models import UserProfile
 from .serializers import UserRegistrationSerializer
 
 
@@ -16,8 +15,13 @@ def register_view(request):
     if serializer.is_valid():
         user = serializer.save()
         token, created = Token.objects.get_or_create(user=user)
+
+        
+        # Convert ObjectId to string for response
+        user_id = str(user._id) if hasattr(user, '_id') else user.id
+
         return Response({
-            'user_id': user.id,
+            'user_id': user_id,
             'username': user.username,
             'email': user.email,
             'token': token.key,

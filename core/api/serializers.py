@@ -1,7 +1,5 @@
 from rest_framework import serializers
-from rest_framework_mongoengine import serializers as me_serializers
 from django.contrib.auth.models import User
-from django.contrib.auth import authenticate
 from .models import UserProfile
 
 class UserRegistrationSerializer(serializers.ModelSerializer):
@@ -11,7 +9,7 @@ class UserRegistrationSerializer(serializers.ModelSerializer):
     
     class Meta:
         model = User
-        fields = ('username', 'email', 'first_name', 'last_name', 'password', 'password_confirm')
+        fields = ('username', 'email', 'password', 'password_confirm')
     
     def validate(self, attrs):
         if attrs['password'] != attrs['password_confirm']:
@@ -20,7 +18,13 @@ class UserRegistrationSerializer(serializers.ModelSerializer):
     
     def create(self, validated_data):
         validated_data.pop('password_confirm')
-        user = User.objects.create_user(**validated_data)
-        # Create MongoDB profile
-        UserProfile.create_from_user(user)
+        user = User.objects.create_user(
+            username=validated_data['username'],
+            email=validated_data['email'],
+            password=validated_data['password']
+        )
+        
+        # Create user profile
+        UserProfile.objects.create(user=user)
+        
         return user
