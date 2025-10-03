@@ -1,10 +1,13 @@
 from rest_framework import generics, status, permissions
-from rest_framework.decorators import api_view, permission_classes
+from rest_framework.decorators import api_view, permission_classes, authentication_classes
 from rest_framework.response import Response
 from rest_framework.authtoken.models import Token
 from django.contrib.auth.models import User
 from .serializers import (UserRegistrationSerializer, UserLoginSerializer)
-from django.contrib.auth import login
+from django.contrib.auth import login, logout
+from rest_framework.authentication import TokenAuthentication
+from rest_framework.permissions import IsAuthenticated
+from django.views.decorators.csrf import csrf_exempt
 
 
 # Authentication Views
@@ -31,7 +34,9 @@ def register_view(request):
     return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
+@csrf_exempt
 @api_view(['POST'])
+@authentication_classes([TokenAuthentication])
 @permission_classes([permissions.AllowAny])
 def login_view(request):
     """User login endpoint"""
@@ -49,3 +54,15 @@ def login_view(request):
         }, status=status.HTTP_201_CREATED)
     return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
+@csrf_exempt
+@api_view(['POST'])
+@authentication_classes([TokenAuthentication])
+@permission_classes([permissions.AllowAny])
+def logout_view(request):
+    """User logout endpoint"""
+    try:
+        request.user.auth_token.delete()
+    except:
+        pass
+    logout(request)
+    return Response({'message': 'Logout Successful'}, status=status.HTTP_201_CREATED)
