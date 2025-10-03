@@ -3,7 +3,7 @@ from rest_framework.decorators import api_view, permission_classes
 from rest_framework.response import Response
 from rest_framework.authtoken.models import Token
 from django.contrib.auth.models import User
-from .serializers import UserRegistrationSerializer
+from .serializers import (UserRegistrationSerializer, UserLoginSerializer)
 
 
 # Authentication Views
@@ -28,3 +28,23 @@ def register_view(request):
             'message': 'User registered successfully'
         }, status=status.HTTP_201_CREATED)
     return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+
+@api_view(['POST'])
+@permission_classes([permissions.AllowAny])
+def login_view(request):
+    """User login endpoint"""
+    serializer = UserLoginSerializer(data=request.data)
+    if serializer.is_valid():
+        user = validated_data['user']
+        login(request, user)
+        token, created = Token.objects.get_or_create(user=user)
+        return Response({
+            'user_id': user.id,
+            'username': user.username,
+            'email': user.email,
+            'token': token.key,
+            'message': 'Login Successful'
+        ), status=status.HTTP_201_OK}
+    return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
