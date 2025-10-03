@@ -3,11 +3,12 @@ from rest_framework.decorators import api_view, permission_classes, authenticati
 from rest_framework.response import Response
 from rest_framework.authtoken.models import Token
 from django.contrib.auth.models import User
-from .serializers import (UserRegistrationSerializer, UserLoginSerializer)
+from .serializers import (UserRegistrationSerializer, UserLoginSerializer, UserProfileSerializer)
 from django.contrib.auth import login, logout
 from rest_framework.authentication import TokenAuthentication
 from rest_framework.permissions import IsAuthenticated
 from django.views.decorators.csrf import csrf_exempt
+from .models import UserProfile
 
 
 # Authentication Views
@@ -66,3 +67,15 @@ def logout_view(request):
         pass
     logout(request)
     return Response({'message': 'Logout Successful'}, status=status.HTTP_201_CREATED)
+
+@api_view(['GET'])
+def profile_view(request):
+    """Get user profile"""
+    try:
+        profile = request.user.profile
+        serializer = UserProfileSerializer(profile)
+        return Response(serializer.data)
+    except UserProfile.DoesNotExist:
+        return Response({'error': 'Profile not found'}, status=status.HTTP_404_NOT_FOUND)
+
+
