@@ -3,12 +3,14 @@ from rest_framework.decorators import api_view, permission_classes, authenticati
 from rest_framework.response import Response
 from rest_framework.authtoken.models import Token
 from django.contrib.auth.models import User
-from .serializers import (UserRegistrationSerializer, UserLoginSerializer, UserProfileSerializer)
+from .serializers import (UserRegistrationSerializer, UserLoginSerializer, UserProfileSerializer, CategorySerializer)
 from django.contrib.auth import login, logout
 from rest_framework.authentication import TokenAuthentication
 from rest_framework.permissions import IsAuthenticated
 from django.views.decorators.csrf import csrf_exempt
-from .models import UserProfile
+from .models import UserProfile, Category
+from django.db.models import Q
+from django.utils.decorators import method_decorator
 
 
 # Authentication Views
@@ -79,3 +81,19 @@ def profile_view(request):
         return Response({'error': 'Profile not found'}, status=status.HTTP_404_NOT_FOUND)
 
 
+@method_decorator(csrf_exempt, name='dispatch')
+class CategoryListCreateView(generics.ListCreateAPIView):
+    """List all categories or create a new category"""
+    queryset = Category.objects.filter(is_active=True)
+    serializer_class = CategorySerializer
+    authentication_classes = [TokenAuthentication]
+    permission_classes = [permissions.IsAuthenticatedOrReadOnly]
+
+    def get_queryset(self):
+        queryset = super().get_queryset()
+        search = self.request.query_params.get('search', None)
+        if search:
+            queryset = queryset.filter(
+                Q(name__icontains=search) | Q(description__icontains=search)
+            )
+        return queryset
