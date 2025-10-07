@@ -1,6 +1,6 @@
 from rest_framework import serializers
 from django.contrib.auth.models import User
-from .models import UserProfile
+from .models import UserProfile, Category
 from django.contrib.auth import authenticate
 
 class UserRegistrationSerializer(serializers.ModelSerializer):
@@ -61,3 +61,14 @@ class UserProfileSerializer(serializers.ModelSerializer):
     class Meta:
         model = UserProfile
         fields = ('username', 'email','first_name', 'last_name', 'bio', 'avatar', 'phone', 'address', 'preferences', 'is_verified', 'created_at', 'updated_at')
+
+class CategorySerializer(serializers.ModelSerializer):
+    """Serializer for category model"""
+    item_count = serializers.SerializerMethodField()
+
+    class Meta:
+        model = Category
+        fields = ('id', 'name', 'description', 'is_active', 'created_at', 'updated_at')
+
+    def get_items_count(self, obj):
+        return obj.items.filter(is_available=True).count() 
