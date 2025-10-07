@@ -23,3 +23,17 @@ class UserProfile(BaseModel):
     
     def __str__(self):
         return f"{self.user.username}'s Profile"
+
+
+class Category(BaseModel):
+    """Category model for organizing items"""
+    name = models.CharField(max_length=100, unique=True)
+    description = models.TextField(blank=True)
+    is_active = models.BooleanField(default=True)
+
+    class Meta:
+        verbose_name_plural = 'Categories'
+        ordering = ['name']
+
+    def __str__(self):
+        return self.name
