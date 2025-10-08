@@ -64,11 +64,13 @@ class UserProfileSerializer(serializers.ModelSerializer):
 
 class CategorySerializer(serializers.ModelSerializer):
     """Serializer for category model"""
-    item_count = serializers.SerializerMethodField()
+    items_count = serializers.SerializerMethodField()
+    id = serializers.CharField(source='_id', read_only=True) 
 
     class Meta:
         model = Category
-        fields = ('id', 'name', 'description', 'is_active', 'created_at', 'updated_at')
+        fields = ('id', 'name', 'description', 'is_active', 'items_count', 'created_at', 'updated_at')
 
     def get_items_count(self, obj):
-        return obj.items.filter(is_available=True).count() 
+        # return obj.items.filter(is_available=True).count() 
+        return len([item for item in obj.items.all() if item.is_available])
