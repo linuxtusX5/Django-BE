@@ -2,6 +2,7 @@ from rest_framework import serializers
 from django.contrib.auth.models import User
 from .models import UserProfile, Category, Item
 from django.contrib.auth import authenticate
+from bson import ObjectId
 
 class UserRegistrationSerializer(serializers.ModelSerializer):
     """Serializer for user registration"""
@@ -75,17 +76,37 @@ class CategorySerializer(serializers.ModelSerializer):
         # return obj.items.filter(is_available=True).count() 
         return len([item for item in obj.items.all() if item.is_available])
 
-
 class ItemSerializer(serializers.ModelSerializer):
     """Serializer for item model"""
+    owner_username = serializers.CharField(source='owner.username', read_only=True)
+    category_name = serializers.CharField(source='category.name', read_only=True)
+    
+    category = serializers.CharField(write_only=True, required=False)
+
+    class Meta:
+        model = Item
+        fields = ('id', 'title', 'description', 'category', 'category_name', 'owner', 'owner_username', 'price', 'quantity', 'is_available', 'tags', 'metadata', 'created_at', 'updated_at')
+        read_only_fields = ['owner']
+
+    def create(self, validated_data):
+        # Handle ObjectId for category
+        category_id = validated_data.pop('category', None)
+        if category_id:
+            try:
+                category = Category.objects.get(_id=ObjectId(category_id))
+                validated_data['category'] = category
+            except Category.DoesNotExist:
+                raise serializers.ValidationError({"category": "Category not found"})
+        
+        validated_data['owner'] = self.context['request'].user
+        return super().create(validated_data)
+
+
+class ItemListSerializer(serializers.ModelSerializer):
+    """Lightweight serializer for item lists"""
     owner_username = serializers.CharField(source='owner.username', read_only=True)
     category_name = serializers.CharField(source='category.name', read_only=True)
 
     class Meta:
         model = Item
-        fields = ('id', 'title', 'description', 'category_name', 'owner', 'owner_username', 'price', 'quantity', 'is_available', 'tags', 'metadata', 'created_at', 'updated_at')
-        read_only_fields = ('owner')
-
-    def create(self, validated_data):
-        validated_data['owner'] = self.context['request'].user
-        return super().create(validated_data)
+        fields = ('id', 'title', 'category_name', 'owner_username', 'price', 'quantity', 'is_available', 'created_at')
