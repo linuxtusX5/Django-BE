@@ -1,5 +1,5 @@
 from django.urls import path
-from .views import register_view, login_view, logout_view, profile_view, CategoryListCreateView
+from .views import register_view, login_view, logout_view, profile_view, CategoryListCreateView, CategoryDetailView
 
 urlpatterns = [
     # Authentication endpoints
@@ -10,5 +10,6 @@ urlpatterns = [
 
     # Categories endpoint
     path('categories/', CategoryListCreateView.as_view(), name='category-list-create'),
+    path('categories/<str:pk>/', CategoryDetailView.as_view(), name='category-detail'),
 
 ]
