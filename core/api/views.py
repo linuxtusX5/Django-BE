@@ -11,6 +11,7 @@ from django.views.decorators.csrf import csrf_exempt
 from .models import UserProfile, Category
 from django.db.models import Q
 from django.utils.decorators import method_decorator
+from bson import ObjectId
 
 
 # Authentication Views
@@ -97,3 +98,22 @@ class CategoryListCreateView(generics.ListCreateAPIView):
                 Q(name__icontains=search) | Q(description__icontains=search)
             )
         return queryset
+
+
+@method_decorator(csrf_exempt, name='dispatch')
+class CategoryDetailView(generics.RetrieveUpdateDestroyAPIView):
+    """Retrieve, update or delete a category"""
+    queryset = Category.objects.all()
+    serializer_class = CategorySerializer
+    authentication_classes = [TokenAuthentication]
+    permission_classes = [permissions.IsAuthenticatedOrReadOnly]
+
+    def get_object(self):
+        pk = self.kwargs.get('pk')
+        return Category.objects.get(_id=ObjectId(pk))
+
+    def destroy(self, request, *args, **kwargs):
+        category = self.get_object()
+        category.is_active = False
+        category.save()
+        return Response({'message': 'Category deactivated Successfully'}, status=status.HTTP_200_OK)
