@@ -8,7 +8,7 @@ urlpatterns = [
     path('auth/logout/', logout_view, name='logout'),
     path('auth/profile/', profile_view, name='profile'),
 
-    # Categories endpoint
+    # Categories endpoints
     path('categories/', CategoryListCreateView.as_view(), name='category-list-create'),
     path('categories/<str:pk>/', CategoryDetailView.as_view(), name='category-detail'),
 
