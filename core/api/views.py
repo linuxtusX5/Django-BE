@@ -209,3 +209,36 @@ class MyItemView(generics.ListAPIView):
 
     def get_queryset(self):
         return Item.objects.filter(owner=self.request.user).select_related('category')
+
+
+# Dashboard/Stats Views
+@api_view(['GET'])
+@permission_classes([permissions.AllowAny])
+def dashboard_stats(request):
+    user = request.user if request.user.is_authenticated else None
+
+    # Safely fetch items
+    items = Item.objects.all()
+    if user:
+        items = [item for item in items if item.owner == user]
+
+    # Count items using Python logic (avoiding Djongo boolean bug)
+    total_items = len(items)
+    available_items = len([i for i in items if getattr(i, "is_available", False)])
+
+    # Safely count active categories
+    categories = Category.objects.all()
+    total_categories = len([c for c in categories if getattr(c, "is_active", False)])
+
+    # Sort by created_at manually
+    recent_items = sorted(items, key=lambda x: x.created_at, reverse=True)[:5]
+    recent_items_data = ItemListSerializer(recent_items, many=True).data
+
+    stats = {
+        'total_items': total_items,
+        'available_items': available_items,
+        'total_categories': total_categories,
+        'recent_items': recent_items_data,
+    }
+    
+    return Response(stats)
