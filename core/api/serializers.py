@@ -11,7 +11,7 @@ class UserRegistrationSerializer(serializers.ModelSerializer):
     
     class Meta:
         model = User
-        fields = ('username', 'email', 'password', 'password_confirm')
+        fields = ('username', 'email', 'first_name', 'last_name', 'password', 'password_confirm')
     
     def validate(self, attrs):
         if attrs['password'] != attrs['password_confirm']:
@@ -75,6 +75,7 @@ class CategorySerializer(serializers.ModelSerializer):
     def get_items_count(self, obj):
         # return obj.items.filter(is_available=True).count() 
         return len([item for item in obj.items.all() if item.is_available])
+        # return Item.objects.filter(category=obj, is_available=True).count()
 
 class ItemSerializer(serializers.ModelSerializer):
     """Serializer for item model"""
