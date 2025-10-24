@@ -88,10 +88,12 @@ def profile_view(request):
 @method_decorator(csrf_exempt, name='dispatch')
 class CategoryListCreateView(generics.ListCreateAPIView):
     """List all categories or create a new category"""
-    queryset = Category.objects.filter(is_active=True)
+    # queryset = Category.objects.filter(is_active=True)
+    queryset = Category.objects.all()
     serializer_class = CategorySerializer
     authentication_classes = [TokenAuthentication]
     permission_classes = [permissions.IsAuthenticatedOrReadOnly]
+    pagination_class = None
 
     def get_queryset(self):
         queryset = super().get_queryset()
